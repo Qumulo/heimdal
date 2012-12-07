@@ -33,6 +33,22 @@
 
 #include "ntlm.h"
 
+static struct ntlm_server_interface *ns_interface = NULL;
+
+/*
+ *
+ */
+
+GSSAPI_LIB_FUNCTION OM_uint32 GSSAPI_LIB_CALL
+gss_ntlm_set_server_interface(struct ntlm_server_interface *iface)
+{
+    if (ns_interface != NULL)
+        return GSS_S_FAILURE;
+
+    ns_interface = iface;
+    return GSS_S_COMPLETE;
+}
+
 /*
  *
  */
@@ -41,13 +57,13 @@ OM_uint32
 _gss_ntlm_allocate_ctx(OM_uint32 *minor_status, ntlm_ctx *ctx)
 {
     OM_uint32 maj_stat;
-    struct ntlm_server_interface *ns_interface = NULL;
-
+    if (ns_interface == NULL) {
 #ifdef DIGEST
-    ns_interface = &ntlmsspi_kdc_digest;
-#endif
-    if (ns_interface == NULL)
+	ns_interface = &ntlmsspi_kdc_digest;
+#else
 	return GSS_S_FAILURE;
+#endif
+    }
 
     *ctx = calloc(1, sizeof(**ctx));
     if (*ctx == NULL) {

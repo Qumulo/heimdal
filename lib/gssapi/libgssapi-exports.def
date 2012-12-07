@@ -76,6 +76,7 @@ EXPORTS
         gss_mo_list
         gss_mo_name
         gss_name_to_oid
+        gss_ntlm_set_server_interface
         gss_oid_to_name
 	gss_oid_equal
 	gss_oid_to_str

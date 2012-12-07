@@ -60,36 +60,6 @@
 #define HC_DEPRECATED_CRYPTO
 #include "crypto-headers.h"
 
-typedef OM_uint32
-(*ntlm_interface_init)(OM_uint32 *, void **);
-
-typedef OM_uint32
-(*ntlm_interface_destroy)(OM_uint32 *, void *);
-
-typedef int
-(*ntlm_interface_probe)(OM_uint32 *, void *, const char *);
-
-typedef OM_uint32
-(*ntlm_interface_type2)(OM_uint32 *, void *, uint32_t, const char *,
-			const char *, uint32_t *, struct ntlm_buf *);
-
-typedef OM_uint32
-(*ntlm_interface_type3)(OM_uint32 *, void *, const struct ntlm_type3 *,
-			struct ntlm_buf *);
-
-typedef void
-(*ntlm_interface_free_buffer)(struct ntlm_buf *);
-
-struct ntlm_server_interface {
-    ntlm_interface_init nsi_init;
-    ntlm_interface_destroy nsi_destroy;
-    ntlm_interface_probe nsi_probe;
-    ntlm_interface_type2 nsi_type2;
-    ntlm_interface_type3 nsi_type3;
-    ntlm_interface_free_buffer nsi_free_buffer;
-};
-
-
 struct ntlmv2_key {
     uint32_t seq;
     RC4_KEY sealkey;

@@ -409,26 +409,12 @@ kdc_type3(OM_uint32 *minor_status,
  *
  */
 
-static void
-kdc_free_buffer(struct ntlm_buf *sessionkey)
-{
-    if (sessionkey->data)
-	free(sessionkey->data);
-    sessionkey->data = NULL;
-    sessionkey->length = 0;
-}
-
-/*
- *
- */
-
 struct ntlm_server_interface ntlmsspi_kdc_digest = {
     kdc_alloc,
     kdc_destroy,
     kdc_probe,
     kdc_type2,
     kdc_type3,
-    kdc_free_buffer
 };
 
 #endif /* DIGEST */
