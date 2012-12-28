@@ -618,6 +618,7 @@ HEIMDAL_KRB5_2.0 {
 		krb5_set_password;
 		krb5_set_password_using_ccache;
 		krb5_set_real_time;
+               krb5_set_mock_time;
 		krb5_set_send_to_kdc_func;
 		krb5_set_use_admin_kdc;
 		krb5_set_warn_dest;

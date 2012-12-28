@@ -33,6 +33,17 @@
 
 #include "krb5_locl.h"
 
+static krb5_timestamp mock_time = 0;
+
+/**
+ * Set the mock clock value (used by Qumulo unit tests).
+ */
+KRB5_LIB_FUNCTION void KRB5_LIB_CALL
+krb5_set_mock_time(krb5_timestamp sec)
+{
+    mock_time = sec;
+}
+
 /**
  * Set the absolute time that the caller knows the kdc has so the
  * kerberos library can calculate the relative diffrence beteen the
@@ -83,7 +94,10 @@ KRB5_LIB_FUNCTION krb5_error_code KRB5_LIB_CALL
 krb5_timeofday (krb5_context context,
 		krb5_timestamp *timeret)
 {
-    *timeret = time(NULL) + context->kdc_sec_offset;
+    if (mock_time)
+	*timeret = mock_time;
+    else
+	*timeret = time(NULL) + context->kdc_sec_offset;
     return 0;
 }
 
@@ -96,12 +110,17 @@ krb5_us_timeofday (krb5_context context,
 		   krb5_timestamp *sec,
 		   int32_t *usec)
 {
-    struct timeval tv;
+    if (mock_time) {
+	*sec = mock_time;
+	*usec = 0;
+    } else {
+	struct timeval tv;
+	gettimeofday (&tv, NULL);
 
-    gettimeofday (&tv, NULL);
+	*sec  = tv.tv_sec + context->kdc_sec_offset;
+	*usec = tv.tv_usec;		/* XXX */
+    }
 
-    *sec  = tv.tv_sec + context->kdc_sec_offset;
-    *usec = tv.tv_usec;		/* XXX */
     return 0;
 }
 
