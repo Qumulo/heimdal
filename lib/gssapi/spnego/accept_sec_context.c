@@ -124,6 +124,51 @@ acceptor_approved(OM_uint32 *minor_status,
     return ret;
 }
 
+/**
+ * Qumulo-specific code: if the initial message does not result in a
+ * successful login, we unconditionally fallback to NTLM.  This way,
+ * we skip over the KRB5 mech type (which is never what we want --
+ * MS KRB5 is the preferred mech type for Kerberos logins).
+ */
+static OM_uint32
+select_fallback_mech(OM_uint32 *minor_status,
+	    gssspnego_ctx ctx,
+	    MechType *mechType,
+	    gss_const_OID *advertised_mech_p)
+{
+    char mechbuf[64];
+    size_t mech_len;
+    gss_OID_desc oid;
+
+    *minor_status = 0;
+    *advertised_mech_p = GSS_C_NO_OID; /* deals with broken MS OID */
+    ctx->selected_mech_type = GSS_C_NO_OID;
+    ctx->preferred_mech_type = GSS_C_NO_OID;
+
+    if (der_put_oid(
+        (unsigned char *)mechbuf + sizeof(mechbuf) - 1,
+        sizeof(mechbuf),
+        mechType,
+        &mech_len))
+    {
+        return GSS_S_DEFECTIVE_TOKEN;
+    }
+
+    oid.length   = (OM_uint32)mech_len;
+    oid.elements = mechbuf + sizeof(mechbuf) - mech_len;
+
+    if (gss_oid_equal(&oid, GSS_NTLM_MECHANISM)) {
+        OM_uint32 ret = gss_duplicate_oid(minor_status, &oid, &ctx->selected_mech_type);
+        if (ret == GSS_S_COMPLETE) {
+            *advertised_mech_p = ctx->selected_mech_type;
+            ret = gss_duplicate_oid(minor_status, &oid, &ctx->preferred_mech_type);
+        }
+        return ret;
+    } else {
+        return GSS_S_BAD_MECH;
+    }
+}
+
 static OM_uint32
 send_supported_mechs (OM_uint32 *minor_status,
 		      gssspnego_ctx ctx,
@@ -759,13 +804,10 @@ acceptor_start
 
 	/* Call glue layer to find first mech we support */
 	for (j = 1; j < ni->mechTypes.len; ++j) {
-	    ret = select_mech(&junk,
-			      ctx,
-			      acceptor_cred_handle,
-			      supported_mechs,
-			      &ni->mechTypes.val[j],
-			      1, /* not optimistic token */
-			      &advertised_mech);
+	    ret = select_fallback_mech(minor_status,
+            ctx,
+            &ni->mechTypes.val[j],
+            &advertised_mech);
 	    if (ret == GSS_S_COMPLETE) {
 		_gss_spnego_log_mech("acceptor selected non-opportunistic mech", ctx->selected_mech_type);
 		break;
