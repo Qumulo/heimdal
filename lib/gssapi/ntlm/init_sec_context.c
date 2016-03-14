@@ -313,6 +313,8 @@ _gss_ntlm_init_sec_context
 	flags |= NTLM_NEG_NTLM;
 	flags |= NTLM_NEG_NTLM2_SESSION;
 	flags |= NTLM_NEG_KEYEX;
+	/* Request Target Info from the server, thus asking for NTLMv2. */
+	flags |= NTLM_NEG_TARGET;
 
 	memset(&type1, 0, sizeof(type1));
 
@@ -367,7 +369,7 @@ _gss_ntlm_init_sec_context
 	 * NTLM Version 1 if no targetinfo buffer.
 	 */
 
-	if (1 || type2.targetinfo.length == 0) {
+	if (type2.targetinfo.length == 0) {
 	    struct ntlm_buf sessionkey;
 
 	    if (type2.flags & NTLM_NEG_NTLM2_SESSION) {
@@ -445,17 +447,11 @@ _gss_ntlm_init_sec_context
 		_gss_ntlm_delete_sec_context(minor_status,
 					     context_handle, NULL);
 		heim_ntlm_free_type2(&type2);
+		heim_ntlm_free_targetinfo(&ti);
 		*minor_status = ret;
 		return GSS_S_DEFECTIVE_TOKEN;
 	    }
-
-	    if (ti.domainname && strcmp(ti.domainname, name->domain) != 0) {
-		_gss_ntlm_delete_sec_context(minor_status,
-					     context_handle, NULL);
-		heim_ntlm_free_type2(&type2);
-		*minor_status = EINVAL;
-		return GSS_S_FAILURE;
-	    }
+	    heim_ntlm_free_targetinfo(&ti);
 
 	    ret = heim_ntlm_calculate_ntlm2(ctx->client->key.data,
 					    ctx->client->key.length,
@@ -473,7 +469,8 @@ _gss_ntlm_init_sec_context
 		return GSS_S_FAILURE;
 	    }
 
-	    ret = heim_ntlm_build_ntlm1_master(ntlmv2, sizeof(ntlmv2),
+	    ret = heim_ntlm_build_ntlm2_master(ntlmv2, sizeof(ntlmv2),
+					       &type3.ntlm,
 					       &sessionkey,
 					       &type3.sessionkey);
 	    memset_s(ntlmv2, sizeof(ntlmv2), 0, sizeof(ntlmv2));
