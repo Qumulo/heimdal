@@ -38,16 +38,13 @@ OM_uint32 GSSAPI_CALLCONV _gsskrb5_release_name
             gss_name_t * input_name
            )
 {
-    krb5_context context;
     krb5_principal name = (krb5_principal)*input_name;
 
     *minor_status = 0;
 
-    GSSAPI_KRB5_INIT (&context);
-
     *input_name = GSS_C_NO_NAME;
 
-    krb5_free_principal(context, name);
+    krb5_free_principal(NULL, name);
 
     return GSS_S_COMPLETE;
 }
