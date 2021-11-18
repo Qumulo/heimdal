@@ -132,6 +132,21 @@ krb5_closelog(krb5_context context,
     return 0;
 }
 
+/**
+ * Set the debug logging facility.
+ *
+ * @param context A Kerberos 5 context
+ * @param fac Facility to use for logging.
+ *
+ * @ingroup krb5_error
+ */
+
+KRB5_LIB_FUNCTION krb5_error_code KRB5_LIB_CALL
+krb5_set_debug_dest_facility(krb5_context context, krb5_log_facility *fac)
+{
+    return heim_set_debug_dest(context->hcontext, fac);
+}
+
 #undef __attribute__
 #define __attribute__(X)
 
