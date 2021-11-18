@@ -570,6 +570,7 @@ EXPORTS
 	krb5_set_config
 	krb5_set_config_files
 	krb5_set_debug_dest
+	krb5_set_debug_dest_facility
 	krb5_set_default_in_tkt_etypes
 	krb5_set_default_realm
 	krb5_set_dns_canonicalize_hostname
