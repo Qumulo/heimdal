@@ -154,6 +154,7 @@ EXPORTS
 	__gss_krb5_get_time_offset_x_oid_desc	DATA
 	__gss_krb5_plugin_register_x_oid_desc	DATA
 	__gss_ntlm_get_session_key_x_oid_desc	DATA
+	__gss_c_inq_sspi_session_key_oid_desc	DATA
 	__gss_c_nt_ntlm_oid_desc	DATA
 	__gss_c_nt_dn_oid_desc	DATA
 	__gss_krb5_nt_principal_name_referral_oid_desc	DATA
