@@ -341,6 +341,7 @@ static gssapi_mech_interface_desc krb5_mech = {
     _gsskrb5_get_mic,
     _gsskrb5_get_mic_iov,
     _gsskrb5_verify_mic,
+    _gsskrb5_verify_mic_iov,
     _gsskrb5_wrap,
     _gsskrb5_unwrap,
     _gsskrb5_display_status,
