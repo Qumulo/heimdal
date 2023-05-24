@@ -42,6 +42,28 @@
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 
+/*
+ * Qumulo
+ */
+
+static FILE *(*qumulo_fopen_config_file)(const char *) = NULL;
+
+static FILE *
+heimdal_fopen_config_file(const char *fname)
+{
+    if (qumulo_fopen_config_file != NULL) {
+        return qumulo_fopen_config_file(fname);
+    }
+
+    return fopen(fname, "r");
+}
+
+void
+heimdal_set_qumulo_fopen_config_file(void *f)
+{
+    qumulo_fopen_config_file = f;
+}
+
 /* Gaah! I want a portable funopen */
 struct fileptr {
     heim_context context;
@@ -671,7 +693,7 @@ heim_config_parse_file_multi(heim_context context,
 #endif
     } else {
         f.context = context;
-        f.f = fopen(fname, "r");
+        f.f = heimdal_fopen_config_file(fname);
         f.s = NULL;
         if (f.f == NULL || fstat(fileno(f.f), &st) == -1) {
             if (f.f != NULL)

@@ -844,6 +844,9 @@ HEIMDAL_KRB5_2.0 {
                 _krb5_openssl_errors;
                 _krb5_hmac_ossl;
 
+                # Qumulo
+                heimdal_set_qumulo_KRB5_KTNAME;
+
 	local:
 		*;
 };
