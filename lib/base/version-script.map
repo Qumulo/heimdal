@@ -196,6 +196,10 @@ HEIMDAL_BASE_1.0 {
 		heim_warnx;
 		initialize_heim_error_table;
 		initialize_heim_error_table_r;
+
+                # Qumulo
+		heimdal_set_qumulo_fopen_config_file;
+
 	local:
 		*;
 };

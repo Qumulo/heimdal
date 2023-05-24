@@ -209,6 +209,10 @@ HEIMDAL_GSS_2.0 {
 		__gss_c_inq_negoex_key_oid_desc;
 		__gss_c_inq_negoex_verify_key_oid_desc;
 
+                # Qumulo
+                heimdal_set_qumulo_NTLM_USER_FILE;
+                heimdal_set_qumulo_fopen_NTLM_USER_FILE;
+		
 	local:
 		*;
 };

@@ -860,6 +860,9 @@ HEIMDAL_KRB5_2.0 {
                 _krb5_find_capath;
                 _krb5_free_capath;
 
+                # Qumulo
+                heimdal_set_qumulo_KRB5_KTNAME;
+
 	local:
 		*;
 };

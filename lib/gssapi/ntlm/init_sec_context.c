@@ -33,6 +33,45 @@
 
 #include "ntlm.h"
 
+/*
+ * Qumulo
+ */
+
+static const char *qumulo_NTLM_USER_FILE = NULL;
+static FILE *(*qumulo_fopen_NTLM_USER_FILE)(const char *) = NULL;
+
+static const char *
+getenv_NTLM_USER_FILE(void)
+{
+    if (qumulo_NTLM_USER_FILE != NULL) {
+        return qumulo_NTLM_USER_FILE;
+    }
+
+    return secure_getenv("NTLM_USER_FILE");
+}
+
+static FILE *
+fopen_NTLM_USER_FILE(const char *fname)
+{
+    if (qumulo_fopen_NTLM_USER_FILE != NULL) {
+        return qumulo_fopen_NTLM_USER_FILE(fname);
+    }
+
+    return fopen(fname, "r");
+}
+
+void
+heimdal_set_qumulo_NTLM_USER_FILE(const char *s)
+{
+    qumulo_NTLM_USER_FILE = s;
+}
+
+void
+heimdal_set_qumulo_fopen_NTLM_USER_FILE(void *f)
+{
+    qumulo_fopen_NTLM_USER_FILE = f;
+}
+
 static int
 from_file(const char *fn, const char *target_domain,
           char **domainp, char **usernamep, struct ntlm_buf *key)
@@ -42,7 +81,7 @@ from_file(const char *fn, const char *target_domain,
 
     *domainp = NULL;
 
-    f = fopen(fn, "r");
+    f = fopen_NTLM_USER_FILE(fn);
     if (f == NULL)
 	return ENOENT;
     rk_cloexec_file(f);
@@ -92,7 +131,7 @@ get_user_file(const ntlm_name target_name,
 
     domain = target_name != NULL ? target_name->domain : NULL;
 
-    fn = secure_getenv("NTLM_USER_FILE");
+    fn = getenv_NTLM_USER_FILE();
     if (fn == NULL)
 	return ENOENT;
     if (from_file(fn, domain, domainp, usernamep, key) == 0)

@@ -127,6 +127,27 @@ main (int argc, char **argv)
  *
  */
 
+/*
+ * Qumulo
+ */
+
+static const char *qumulo_KRB5_KTNAME = NULL;
+
+static const char *
+getenv_KRB5_KTNAME(void)
+{
+    if (qumulo_KRB5_KTNAME != NULL) {
+        return qumulo_KRB5_KTNAME;
+    }
+
+    return secure_getenv("KRB5_KTNAME");
+}
+
+void
+heimdal_set_qumulo_KRB5_KTNAME(const char *s)
+{
+    qumulo_KRB5_KTNAME = s;
+}
 
 /**
  * Register a new keytab backend.
@@ -250,7 +271,7 @@ static const char *default_ktname(krb5_context context)
 {
     const char *tmp = NULL;
 
-    tmp = secure_getenv("KRB5_KTNAME");
+    tmp = getenv_KRB5_KTNAME();
     if(tmp != NULL)
 	return tmp;
     return context->default_keytab;
