@@ -670,7 +670,10 @@ heim_ntlm_decode_type1(const struct ntlm_buf *buf, struct ntlm_type1 *data)
     uint32_t type;
     struct sec_buffer domain, hostname;
     krb5_storage *in;
-    int ucs2;
+    // In the type1 message, domain and workstation are always sent in the OEM encoding, even
+    // if the peer indicates support for unicode in the message flags.
+    // See [MS-NLMP] 2.2.1.1
+    int ucs2 = 0;
 
     memset(data, 0, sizeof(*data));
 
@@ -686,8 +689,6 @@ heim_ntlm_decode_type1(const struct ntlm_buf *buf, struct ntlm_type1 *data)
     CHECK(krb5_ret_uint32(in, &type), 0);
     CHECK(type, 1);
     CHECK(krb5_ret_uint32(in, &data->flags), 0);
-
-    ucs2 = !!(data->flags & NTLM_NEG_UNICODE);
 
     /*
      * domain and hostname are unconditionally encoded regardless of
@@ -738,13 +739,13 @@ heim_ntlm_encode_type1(const struct ntlm_type1 *type1, struct ntlm_buf *data)
     struct sec_buffer domain, hostname;
     krb5_storage *out;
     uint32_t base, flags;
+    // In the type1 message, domain and workstation are always sent in the OEM encoding, even
+    // if the peer indicates support for unicode in the message flags.
+    // See [MS-NLMP] 2.2.1.1
     int ucs2 = 0;
 
     flags = type1->flags;
     base = 16 + 2 * SIZE_SEC_BUFFER;
-
-    if (flags & NTLM_NEG_UNICODE)
-	ucs2 = 1;
 
     if (flags & NTLM_NEG_VERSION)
 	base += SIZE_OS_VERSION; /* os */
