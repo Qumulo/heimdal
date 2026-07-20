@@ -357,7 +357,6 @@ void _bsearch_file_close(bsearch_file_handle *bfh);
  */
 
 #include <heim_threads.h>
-#include <com_err.h>
 
 /*
  * Service logging facility (moved from kdc/).

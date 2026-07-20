@@ -60,6 +60,7 @@
 
 #include "heimqueue.h"
 #include "heim_threads.h"
+#include <com_err.h>
 #include "heimbase.h"
 #include "heimbasepriv.h"
 
