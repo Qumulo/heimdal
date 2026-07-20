@@ -112,6 +112,12 @@ if test "$with_openssl" != "no"; then
         LDFLAGS="${LIB_openssl_crypto} ${LDFLAGS}"
         AC_CHECK_LIB([crypto], [OPENSSL_init],
                      [LIB_openssl_crypto="${LIB_openssl_crypto} -lcrypto"; openssl=yes], [openssl=no], [])
+        # wolfSSL's compatibility libcrypto exports only wolfSSL_-prefixed
+        # symbols; its headers map the OpenSSL names onto them.
+        if test "$openssl" = "no"; then
+                AC_CHECK_LIB([crypto], [wolfSSL_Init],
+                             [LIB_openssl_crypto="${LIB_openssl_crypto} -lcrypto"; openssl=yes], [openssl=no], [])
+        fi
         # These cases are just for static linking on older OSes,
         # presumably.
         if test "$openssl" = "no"; then
