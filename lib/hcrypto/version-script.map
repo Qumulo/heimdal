@@ -48,7 +48,6 @@ HEIMDAL_CRYPTO_1.0 {
 		hc_DES_init_random_number_generator;
 		hc_DES_is_weak_key;
 		hc_DES_key_sched;
-		hc_DES_mem_rand8;
 		hc_DES_new_random_key;
 		hc_DES_pcbc_encrypt;
 		hc_DES_rand_data;
@@ -70,7 +69,6 @@ HEIMDAL_CRYPTO_1.0 {
 		hc_DH_get_default_method;
 		hc_DH_get_ex_data;
 		hc_DH_ltm_method;
-		hc_DH_gmp_method;
 		hc_DH_new;
 		hc_DH_new_method;
 		hc_DH_null_method;
@@ -169,20 +167,6 @@ HEIMDAL_CRYPTO_1.0 {
 		hc_EVP_sha384;
 		hc_EVP_sha512;
 
-		hc_EVP_cc_md2;
-		hc_EVP_cc_md4;
-		hc_EVP_cc_md5;
-		hc_EVP_cc_sha1;
-		hc_EVP_cc_sha256;
-		hc_EVP_cc_sha384;
-		hc_EVP_cc_sha512;
-		hc_EVP_cc_des_ede3_cbc;
-		hc_EVP_cc_aes_128_cbc;
-		hc_EVP_cc_aes_192_cbc;
-		hc_EVP_cc_aes_256_cbc;
-		hc_EVP_cc_aes_128_cfb8;
-		hc_EVP_cc_aes_192_cfb8;
-		hc_EVP_cc_aes_256_cfb8;
 
 		hc_EVP_hcrypto_md2;
 		hc_EVP_hcrypto_md4;
@@ -238,9 +222,6 @@ HEIMDAL_CRYPTO_1.0 {
 		hc_EVP_pkcs11_rc4;
 		hc_EVP_pkcs11_rc4_40;
 
-		hc_EVP_hcrypto_aes_128_cts;
-		hc_EVP_hcrypto_aes_192_cts;
-		hc_EVP_hcrypto_aes_256_cts;
 		hc_HMAC;
 		hc_HMAC_CTX_cleanup;
 		hc_HMAC_CTX_free;
