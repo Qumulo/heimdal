@@ -75,6 +75,27 @@
 /* Now it's safe to include OpenSSL headers */
 #include <openssl/evp.h>
 
+/*
+ * Compatibility layers like wolfSSL's omit NIDs for ciphers they don't
+ * build.  EVP_get_cipherbynid() returns NULL for them and hcrypto falls
+ * back to its builtins, so the standard values suffice here.
+ */
+#ifndef NID_rc2_cbc
+#define NID_rc2_cbc 37
+#endif
+#ifndef NID_rc2_40_cbc
+#define NID_rc2_40_cbc 98
+#endif
+#ifndef NID_rc2_64_cbc
+#define NID_rc2_64_cbc 166
+#endif
+#ifndef NID_rc4_40
+#define NID_rc4_40 97
+#endif
+#ifndef NID_camellia_192_cbc
+#define NID_camellia_192_cbc 751
+#endif
+
 #if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
 #define EVP_MD_CTX_new EVP_MD_CTX_create
 #define EVP_MD_CTX_free EVP_MD_CTX_destroy
