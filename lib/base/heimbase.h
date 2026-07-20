@@ -509,7 +509,6 @@ void heim_w32_service_thread_detach(void *);
 
 #include <heim_threads.h>
 #include "heimbase-atomics.h"
-#include <com_err.h>
 
 /*
  * Service logging facility (moved from kdc/).
