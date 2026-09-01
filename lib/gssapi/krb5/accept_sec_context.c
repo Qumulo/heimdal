@@ -143,6 +143,8 @@ _gsskrb5i_is_cfx(krb5_context context, gsskrb5_ctx ctx, int acceptor)
     }
     if (ctx->crypto)
         krb5_crypto_destroy(context, ctx->crypto);
+    /* The pooled cryptos wrap the key this function may be replacing. */
+    _gsskrb5i_per_msg_crypto_flush(context, ctx);
     /* XXX We really shouldn't ignore this; will come back to this */
     (void) krb5_crypto_init(context, key, 0, &ctx->crypto);
 }
