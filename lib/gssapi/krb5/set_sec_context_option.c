@@ -187,6 +187,8 @@ make_rfc4121_context(OM_uint32 *minor,
     }
     key->keyvalue.length = keysize;
 
+    /* The pooled cryptos wrap the key this option is replacing. */
+    _gsskrb5i_per_msg_crypto_flush(context, ctx);
     ret = krb5_crypto_init(context, key, 0, &ctx->crypto);
     if (ret != 0)
 	goto out;

@@ -87,6 +87,14 @@ typedef struct gsskrb5_ctx {
   krb5_keyblock *service_keyblock;
   krb5_data fwd_data;
   krb5_crypto crypto;
+  /*
+   * Idle krb5_crypto instances for per-message operations, each created
+   * from the token key.  Protected by ctx_id_mutex.  See the per-message
+   * crypto pool in cfx.c.
+   */
+#define GSSKRB5_PER_MSG_CRYPTO_POOL_SIZE 8
+  krb5_crypto per_msg_crypto[GSSKRB5_PER_MSG_CRYPTO_POOL_SIZE];
+  unsigned per_msg_crypto_count;
 } *gsskrb5_ctx;
 
 static inline krb5_boolean

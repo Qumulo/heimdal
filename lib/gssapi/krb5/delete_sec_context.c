@@ -75,6 +75,7 @@ _gsskrb5_delete_sec_context(OM_uint32 * minor_status,
     krb5_data_free(&ctx->fwd_data);
     if (ctx->crypto)
     	krb5_crypto_destroy(context, ctx->crypto);
+    _gsskrb5i_per_msg_crypto_flush(context, ctx);
     if (ctx->ccache && (ctx->more_flags & CLOSE_CCACHE))
 	krb5_cc_close(context, ctx->ccache);
 

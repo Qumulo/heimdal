@@ -36,6 +36,227 @@
  * Implementation of RFC 4121
  */
 
+/*
+ * A krb5_crypto is not safe for concurrent use: its derived-key cache and
+ * the EVP cipher contexts embedded in each derived key are mutated by every
+ * encrypt and checksum call, so per-message operations sharing ctx->crypto
+ * could not run concurrently on one established context.  The per-message
+ * operations below instead check a krb5_crypto out of a small per-context
+ * pool (creating one from the token key when the pool is empty) and return
+ * it afterwards, so concurrent wrap, unwrap, get_mic and verify_mic calls
+ * never share cipher state, while each pooled instance keeps its derived-key
+ * cache across messages.  ctx->crypto remains the source of enctype metadata
+ * (lengths, checksum type), which is immutable after creation.
+ */
+
+krb5_error_code
+_gsskrb5i_per_msg_crypto_get(krb5_context context,
+			     gsskrb5_ctx ctx,
+			     krb5_crypto *crypto)
+{
+    krb5_error_code ret;
+    krb5_keyblock *key;
+
+    HEIMDAL_MUTEX_lock(&ctx->ctx_id_mutex);
+    if (ctx->per_msg_crypto_count > 0) {
+	*crypto = ctx->per_msg_crypto[--ctx->per_msg_crypto_count];
+	HEIMDAL_MUTEX_unlock(&ctx->ctx_id_mutex);
+	return 0;
+    }
+    /* The subkey fields the token-key lookup reads change under this mutex. */
+    ret = _gsskrb5i_get_token_key(ctx, context, &key);
+    HEIMDAL_MUTEX_unlock(&ctx->ctx_id_mutex);
+    if (ret)
+	return ret;
+    ret = krb5_crypto_init(context, key, 0, crypto);
+    krb5_free_keyblock(context, key);
+    return ret;
+}
+
+void
+_gsskrb5i_per_msg_crypto_put(krb5_context context,
+			     gsskrb5_ctx ctx,
+			     krb5_crypto crypto)
+{
+    HEIMDAL_MUTEX_lock(&ctx->ctx_id_mutex);
+    if (ctx->per_msg_crypto_count < GSSKRB5_PER_MSG_CRYPTO_POOL_SIZE) {
+	ctx->per_msg_crypto[ctx->per_msg_crypto_count++] = crypto;
+	crypto = NULL;
+    }
+    HEIMDAL_MUTEX_unlock(&ctx->ctx_id_mutex);
+    if (crypto)
+	krb5_crypto_destroy(context, crypto);
+}
+
+/*
+ * Empties the pool.  Call wherever the token key can change or the context
+ * is torn down.  The caller must externally serialize this against
+ * per-message operations, the same exclusion the callers already rely on
+ * when they replace ctx->crypto; ctx_id_mutex is not enough, because
+ * per-message operations do not hold it across their crypto work.
+ */
+void
+_gsskrb5i_per_msg_crypto_flush(krb5_context context,
+			       gsskrb5_ctx ctx)
+{
+    while (ctx->per_msg_crypto_count > 0)
+	krb5_crypto_destroy(context,
+			    ctx->per_msg_crypto[--ctx->per_msg_crypto_count]);
+}
+
+static krb5_error_code
+cfx_encrypt_iov_ivec(krb5_context context,
+		     gsskrb5_ctx ctx,
+		     unsigned usage,
+		     krb5_crypto_iov *data,
+		     unsigned int num_data,
+		     void *ivec)
+{
+    krb5_crypto crypto;
+    krb5_error_code ret;
+
+    ret = _gsskrb5i_per_msg_crypto_get(context, ctx, &crypto);
+    if (ret)
+	return ret;
+    ret = krb5_encrypt_iov_ivec(context, crypto, usage, data, num_data, ivec);
+    _gsskrb5i_per_msg_crypto_put(context, ctx, crypto);
+    return ret;
+}
+
+static krb5_error_code
+cfx_decrypt_iov_ivec(krb5_context context,
+		     gsskrb5_ctx ctx,
+		     unsigned usage,
+		     krb5_crypto_iov *data,
+		     unsigned int num_data,
+		     void *ivec)
+{
+    krb5_crypto crypto;
+    krb5_error_code ret;
+
+    ret = _gsskrb5i_per_msg_crypto_get(context, ctx, &crypto);
+    if (ret)
+	return ret;
+    ret = krb5_decrypt_iov_ivec(context, crypto, usage, data, num_data, ivec);
+    _gsskrb5i_per_msg_crypto_put(context, ctx, crypto);
+    return ret;
+}
+
+static krb5_error_code
+cfx_create_checksum_iov(krb5_context context,
+			gsskrb5_ctx ctx,
+			unsigned usage,
+			krb5_crypto_iov *data,
+			unsigned int num_data,
+			krb5_cksumtype *type)
+{
+    krb5_crypto crypto;
+    krb5_error_code ret;
+
+    ret = _gsskrb5i_per_msg_crypto_get(context, ctx, &crypto);
+    if (ret)
+	return ret;
+    ret = krb5_create_checksum_iov(context, crypto, usage, data, num_data, type);
+    _gsskrb5i_per_msg_crypto_put(context, ctx, crypto);
+    return ret;
+}
+
+static krb5_error_code
+cfx_verify_checksum_iov(krb5_context context,
+			gsskrb5_ctx ctx,
+			unsigned usage,
+			krb5_crypto_iov *data,
+			unsigned int num_data,
+			krb5_cksumtype *type)
+{
+    krb5_crypto crypto;
+    krb5_error_code ret;
+
+    ret = _gsskrb5i_per_msg_crypto_get(context, ctx, &crypto);
+    if (ret)
+	return ret;
+    ret = krb5_verify_checksum_iov(context, crypto, usage, data, num_data, type);
+    _gsskrb5i_per_msg_crypto_put(context, ctx, crypto);
+    return ret;
+}
+
+static krb5_error_code
+cfx_encrypt(krb5_context context,
+	    gsskrb5_ctx ctx,
+	    unsigned usage,
+	    void *data,
+	    size_t len,
+	    krb5_data *result)
+{
+    krb5_crypto crypto;
+    krb5_error_code ret;
+
+    ret = _gsskrb5i_per_msg_crypto_get(context, ctx, &crypto);
+    if (ret)
+	return ret;
+    ret = krb5_encrypt(context, crypto, usage, data, len, result);
+    _gsskrb5i_per_msg_crypto_put(context, ctx, crypto);
+    return ret;
+}
+
+static krb5_error_code
+cfx_decrypt(krb5_context context,
+	    gsskrb5_ctx ctx,
+	    unsigned usage,
+	    void *data,
+	    size_t len,
+	    krb5_data *result)
+{
+    krb5_crypto crypto;
+    krb5_error_code ret;
+
+    ret = _gsskrb5i_per_msg_crypto_get(context, ctx, &crypto);
+    if (ret)
+	return ret;
+    ret = krb5_decrypt(context, crypto, usage, data, len, result);
+    _gsskrb5i_per_msg_crypto_put(context, ctx, crypto);
+    return ret;
+}
+
+static krb5_error_code
+cfx_create_checksum(krb5_context context,
+		    gsskrb5_ctx ctx,
+		    unsigned usage,
+		    krb5_cksumtype type,
+		    void *data,
+		    size_t len,
+		    Checksum *result)
+{
+    krb5_crypto crypto;
+    krb5_error_code ret;
+
+    ret = _gsskrb5i_per_msg_crypto_get(context, ctx, &crypto);
+    if (ret)
+	return ret;
+    ret = krb5_create_checksum(context, crypto, usage, type, data, len, result);
+    _gsskrb5i_per_msg_crypto_put(context, ctx, crypto);
+    return ret;
+}
+
+static krb5_error_code
+cfx_verify_checksum(krb5_context context,
+		    gsskrb5_ctx ctx,
+		    unsigned usage,
+		    void *data,
+		    size_t len,
+		    Checksum *cksum)
+{
+    krb5_crypto crypto;
+    krb5_error_code ret;
+
+    ret = _gsskrb5i_per_msg_crypto_get(context, ctx, &crypto);
+    if (ret)
+	return ret;
+    ret = krb5_verify_checksum(context, crypto, usage, data, len, cksum);
+    _gsskrb5i_per_msg_crypto_put(context, ctx, crypto);
+    return ret;
+}
+
 #define CFXSentByAcceptor	(1 << 0)
 #define CFXSealed		(1 << 1)
 #define CFXAcceptorSubkey	(1 << 2)
@@ -581,7 +802,7 @@ _gssapi_wrap_cfx_iov(OM_uint32 *minor_status,
 	data[i].data.length = k5tsize;
 	i++;
 
-	ret = krb5_encrypt_iov_ivec(context, ctx->crypto, usage, data, i, NULL);
+	ret = cfx_encrypt_iov_ivec(context, ctx, usage, data, i, NULL);
 	if (ret != 0) {
 	    *minor_status = ret;
 	    major_status = GSS_S_FAILURE;
@@ -634,7 +855,7 @@ _gssapi_wrap_cfx_iov(OM_uint32 *minor_status,
 	data[i].data.length = k5tsize;
 	i++;
 
-	ret = krb5_create_checksum_iov(context, ctx->crypto, usage, data, i, NULL);
+	ret = cfx_create_checksum_iov(context, ctx, usage, data, i, NULL);
 	if (ret) {
 	    *minor_status = ret;
 	    major_status = GSS_S_FAILURE;
@@ -934,7 +1155,7 @@ _gssapi_unwrap_cfx_iov(OM_uint32 *minor_status,
 	data[i].data.length = k5tsize;
 	i++;
 
-	ret = krb5_decrypt_iov_ivec(context, ctx->crypto, usage, data, i, NULL);
+	ret = cfx_decrypt_iov_ivec(context, ctx, usage, data, i, NULL);
 	if (ret != 0) {
 	    *minor_status = ret;
 	    major_status = GSS_S_FAILURE;
@@ -1014,7 +1235,7 @@ _gssapi_unwrap_cfx_iov(OM_uint32 *minor_status,
 	token->RRC[0] = 0;
 	token->RRC[1] = 0;
 
-	ret = krb5_verify_checksum_iov(context, ctx->crypto, usage, data, i, NULL);
+	ret = cfx_verify_checksum_iov(context, ctx, usage, data, i, NULL);
 	if (ret) {
 	    *minor_status = ret;
 	    major_status = GSS_S_FAILURE;
@@ -1308,7 +1529,7 @@ OM_uint32 _gssapi_wrap_cfx(OM_uint32 *minor_status,
 	memcpy(p + input_message_buffer->length + padlength,
 	       token, sizeof(*token));
 
-	ret = krb5_encrypt(context, ctx->crypto,
+	ret = cfx_encrypt(context, ctx,
 			   usage, p,
 			   input_message_buffer->length + padlength +
 				sizeof(*token),
@@ -1351,7 +1572,7 @@ OM_uint32 _gssapi_wrap_cfx(OM_uint32 *minor_status,
 	memcpy(buf, input_message_buffer->value, input_message_buffer->length);
 	memcpy(buf + input_message_buffer->length, token, sizeof(*token));
 
-	ret = krb5_create_checksum(context, ctx->crypto,
+	ret = cfx_create_checksum(context, ctx,
 				   usage, 0, buf,
 				   input_message_buffer->length +
 					sizeof(*token),
@@ -1504,7 +1725,7 @@ OM_uint32 _gssapi_unwrap_cfx(OM_uint32 *minor_status,
 	    return GSS_S_FAILURE;
 	}
 
-	ret = krb5_decrypt(context, ctx->crypto, usage,
+	ret = cfx_decrypt(context, ctx, usage,
 	    p, len, &data);
 	if (ret != 0) {
 	    *minor_status = ret;
@@ -1581,7 +1802,7 @@ OM_uint32 _gssapi_unwrap_cfx(OM_uint32 *minor_status,
 	token->RRC[0] = 0;
 	token->RRC[1] = 0;
 
-	ret = krb5_verify_checksum(context, ctx->crypto,
+	ret = cfx_verify_checksum(context, ctx,
 				   usage,
 				   output_message_buffer->value,
 				   len + sizeof(*token),
@@ -1652,7 +1873,7 @@ OM_uint32 _gssapi_mic_cfx(OM_uint32 *minor_status,
 	usage = KRB5_KU_USAGE_ACCEPTOR_SIGN;
     }
 
-    ret = krb5_create_checksum(context, ctx->crypto,
+    ret = cfx_create_checksum(context, ctx,
 	usage, 0, buf, len, &cksum);
     if (ret != 0) {
 	*minor_status = ret;
@@ -1776,7 +1997,7 @@ OM_uint32 _gssapi_verify_mic_cfx(OM_uint32 *minor_status,
     memcpy(buf, message_buffer->value, message_buffer->length);
     memcpy(buf + message_buffer->length, token, sizeof(*token));
 
-    ret = krb5_verify_checksum(context, ctx->crypto,
+    ret = cfx_verify_checksum(context, ctx,
 			       usage,
 			       buf,
 			       sizeof(*token) + message_buffer->length,
@@ -1942,7 +2163,7 @@ _gssapi_get_mic_iov(
 	data[i].data.length = k5tsize;
 	i++;
 
-	ret = krb5_create_checksum_iov(context, ctx->crypto, usage, data, i, NULL);
+	ret = cfx_create_checksum_iov(context, ctx, usage, data, i, NULL);
 	if (ret) {
 		*minor_status = ret;
 		major_status = GSS_S_FAILURE;
@@ -2074,7 +2295,7 @@ _gssapi_verify_mic_iov(
 	data[i].data.length = token_buffer->length - sizeof(*token);
 	i++;
 
-	ret = krb5_verify_checksum_iov(context, ctx->crypto, usage, data, i, NULL);
+	ret = cfx_verify_checksum_iov(context, ctx, usage, data, i, NULL);
 	if (ret) {
 		*minor_status = ret;
 		major_status = GSS_S_BAD_MIC;

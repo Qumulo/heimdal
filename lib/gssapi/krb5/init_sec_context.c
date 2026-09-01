@@ -131,6 +131,7 @@ _gsskrb5_create_ctx(
     ctx->endtime		= 0;
     ctx->order			= NULL;
     ctx->crypto			= NULL;
+    ctx->per_msg_crypto_count	= 0;
     HEIMDAL_MUTEX_init(&ctx->ctx_id_mutex);
 
     kret = krb5_auth_con_init (context, &ctx->auth_context);
