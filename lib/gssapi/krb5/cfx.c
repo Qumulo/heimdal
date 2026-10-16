@@ -1977,6 +1977,7 @@ _gssapi_verify_mic_iov(
 	krb5_crypto_iov *data = NULL;
 	u_char token_flags;
 	OM_uint32 seq_number_lo, seq_number_hi;
+	OM_uint32 seq_err;
 
 	*minor_status = 0;
 
@@ -2020,17 +2021,16 @@ _gssapi_verify_mic_iov(
 	_gss_mg_decode_be_uint32(&token->SND_SEQ[4], &seq_number_lo);
 	if (seq_number_hi) {
 		*minor_status = ERANGE;
-		return GSS_S_UNSEQ_TOKEN;
+		return GSS_S_UNSEQ_TOKEN | GSS_S_FAILURE;
 	}
 
 	HEIMDAL_MUTEX_lock(&ctx->ctx_id_mutex);
-	ret = _gssapi_msg_order_check(ctx->order, seq_number_lo);
-	if (ret != 0) {
-		*minor_status = 0;
-		HEIMDAL_MUTEX_unlock(&ctx->ctx_id_mutex);
-		return ret;
-	}
+	seq_err = _gssapi_msg_order_check(ctx->order, seq_number_lo);
 	HEIMDAL_MUTEX_unlock(&ctx->ctx_id_mutex);
+	if (seq_err == GSS_S_FAILURE) {
+		*minor_status = 0;
+		return seq_err;
+	}
 
 	if (ctx->more_flags & LOCAL) {
 		usage = KRB5_KU_USAGE_ACCEPTOR_SIGN;
@@ -2080,7 +2080,7 @@ _gssapi_verify_mic_iov(
 	free(data);
 
 	*minor_status = 0;
-	return GSS_S_COMPLETE;
+	return GSS_S_COMPLETE | seq_err;
 
 failure:
 	if (data) {
