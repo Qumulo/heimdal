@@ -1,0 +1,27 @@
+{
+  "nodes": {
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1787145457,
+        "narHash": "sha256-PViceKPdXEZHdXigzQ8Ld2AleH497peV6MIclT7k+XA=",
+        "owner": "Qumulo",
+        "repo": "nixpkgs",
+        "rev": "222832122e424889b3a9a6dac2fd10a188c99698",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Qumulo",
+        "repo": "nixpkgs",
+        "rev": "222832122e424889b3a9a6dac2fd10a188c99698",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
