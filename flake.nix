@@ -81,6 +81,13 @@
             }" || { cat lib/krb5/test-suite.log; exit 1; }
             make -C lib/gssapi check TESTS="test_oid test_names test_cfx" ||
               { cat lib/gssapi/test-suite.log; exit 1; }
+            # qfsd runs separate contexts in parallel; nothing they share may race.
+            $CC -O1 -Iinclude -Ilib/krb5 ${./nix/tests/mic-threads.c} \
+              -Llib/krb5/.libs -lkrb5 -lpthread -o $TMPDIR/mic-threads
+            for enctype in aes256-cts-hmac-sha1-96 aes256-cts-hmac-sha384-192; do
+              LD_LIBRARY_PATH=lib/krb5/.libs:lib/asn1/.libs:lib/base/.libs:lib/wind/.libs:lib/roken/.libs:lib/com_err/.libs:lib/sqlite/.libs \
+                $TMPDIR/mic-threads $enctype 8 2000 10 separate
+            done
             runHook postCheck
           '';
         };
