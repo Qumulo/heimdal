@@ -35,6 +35,8 @@
 
 #include "krb5_locl.h"
 
+#ifdef PKINIT
+
 struct krb5_dh_moduli {
     char *name;
     unsigned long bits;
@@ -3002,3 +3004,161 @@ _krb5_pk_is_kdc_verified(krb5_context context,
 
     return opt->opt_private->pk_init_ctx->kdc_verified;
 }
+
+#else /* !(PKINIT) */
+
+KRB5_LIB_FUNCTION krb5_error_code KRB5_LIB_CALL
+_krb5_dh_group_ok(krb5_context context, unsigned long bits,
+		  heim_integer *p, heim_integer *g, heim_integer *q,
+		  struct krb5_dh_moduli **moduli,
+		  char **name)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for PKINIT compiled in", ""));
+    return EINVAL;
+}
+
+KRB5_LIB_FUNCTION void KRB5_LIB_CALL
+_krb5_get_init_creds_opt_free_pkinit(krb5_get_init_creds_opt *opt)
+{
+}
+
+KRB5_LIB_FUNCTION krb5_error_code KRB5_LIB_CALL
+krb5_get_init_creds_opt_set_pkinit(krb5_context context,
+				   krb5_get_init_creds_opt *opt,
+				   krb5_principal principal,
+				   const char *user_id,
+				   const char *x509_anchors,
+				   char * const * pool,
+				   char * const * pki_revoke,
+				   int flags,
+				   krb5_prompter_fct prompter,
+				   void *prompter_data,
+				   char *password)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for PKINIT compiled in", ""));
+    return EINVAL;
+}
+
+KRB5_LIB_FUNCTION krb5_error_code KRB5_LIB_CALL
+krb5_get_init_creds_opt_set_pkinit_allowed_algs(krb5_context context,
+                                                krb5_get_init_creds_opt *opt,
+                                                const char *dh_alg,
+                                                const char *sig_alg,
+                                                const char *kdf_alg)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for PKINIT compiled in", ""));
+    return EINVAL;
+}
+
+krb5_error_code KRB5_LIB_FUNCTION
+krb5_get_init_creds_opt_set_pkinit_user_certs(krb5_context context,
+					      krb5_get_init_creds_opt *opt,
+					      struct hx509_certs_data *certs)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for PKINIT compiled in", ""));
+    return EINVAL;
+}
+
+KRB5_LIB_FUNCTION krb5_error_code KRB5_LIB_CALL
+_krb5_parse_moduli(krb5_context context, const char *file,
+		   struct krb5_dh_moduli ***moduli)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for PKINIT compiled in", ""));
+    return EINVAL;
+}
+
+KRB5_LIB_FUNCTION krb5_error_code  KRB5_LIB_CALL
+krb5_pk_enterprise_cert(krb5_context context,
+			const char *user_id,
+			krb5_const_realm realm,
+			krb5_principal *principal,
+			struct hx509_certs_data **res)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for PKINIT compiled in", ""));
+    return EINVAL;
+}
+
+KRB5_LIB_FUNCTION krb5_boolean KRB5_LIB_CALL
+_krb5_pk_is_kdc_verified(krb5_context context,
+			 krb5_get_init_creds_opt *opt)
+{
+    return FALSE;
+}
+
+KRB5_LIB_FUNCTION krb5_error_code KRB5_LIB_CALL
+_krb5_pk_kx_confirm(krb5_context context,
+		    krb5_pk_init_ctx ctx,
+		    krb5_keyblock *reply_key,
+		    krb5_keyblock *session_key,
+		    PA_DATA *pa_pkinit_kx)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for PKINIT compiled in", ""));
+    return EINVAL;
+}
+
+KRB5_LIB_FUNCTION krb5_error_code KRB5_LIB_CALL
+_krb5_pk_load_id(krb5_context context,
+		 struct krb5_pk_identity **ret_id,
+		 const char *user_id,
+		 const char *anchor_id,
+		 char * const *chain_list,
+		 char * const *revoke_list,
+		 krb5_prompter_fct prompter,
+		 void *prompter_data,
+		 char *password)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for PKINIT compiled in", ""));
+    return EINVAL;
+}
+
+KRB5_LIB_FUNCTION krb5_error_code KRB5_LIB_CALL
+_krb5_pk_mk_ContentInfo(krb5_context context,
+			const krb5_data *buf,
+			const heim_oid *oid,
+			struct ContentInfo *content_info)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for PKINIT compiled in", ""));
+    return EINVAL;
+}
+
+KRB5_LIB_FUNCTION krb5_error_code KRB5_LIB_CALL
+_krb5_pk_mk_padata(krb5_context context,
+		   void *c,
+		   int ic_flags,
+		   int win2k,
+		   const KDC_REQ_BODY *req_body,
+		   unsigned nonce,
+                   krb5_error_code error_code,
+                   TYPED_DATA *td,
+		   METHOD_DATA *md)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for PKINIT compiled in", ""));
+    return EINVAL;
+}
+
+KRB5_LIB_FUNCTION krb5_error_code KRB5_LIB_CALL
+_krb5_pk_rd_pa_reply(krb5_context context,
+		     void *c,
+		     const AS_REQ *a,
+                     const AS_REP *kdc_rep,
+		     unsigned nonce,
+		     const krb5_data *req_buffer,
+		     PA_DATA *pa,
+		     krb5_keyblock **key)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for PKINIT compiled in", ""));
+    return EINVAL;
+}
+
+#endif /* PKINIT */

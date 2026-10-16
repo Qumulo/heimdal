@@ -88,7 +88,7 @@ libkrb5_la_LIBADD = \
 	$(top_builddir)/lib/ipc/libheim-ipcc.la \
 	$(top_builddir)/lib/wind/libwind.la \
 	$(top_builddir)/lib/base/libheimbase.la \
-	$(top_builddir)/lib/hx509/libhx509.la \
+	$(LIB_pkinit) \
 	$(LIB_openssl_crypto) \
 	$(use_sqlite) \
 	$(LIB_com_err) \
@@ -103,6 +103,7 @@ librfc3961_la_LIBADD = \
 	$(top_builddir)/lib/ipc/libheim-ipcc.la \
 	$(top_builddir)/lib/wind/libwind.la \
 	$(LIB_pkinit) \
+	$(LIB_openssl_crypto) \
 	$(use_sqlite) \
 	$(LIB_com_err) \
 	$(LIB_libintl) \
