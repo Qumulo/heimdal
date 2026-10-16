@@ -478,9 +478,11 @@ _gss_load_mech(void)
 out:
 
 #endif
+#ifdef SANON
 	if (add_builtin(__gss_sanon_initialize()))
             _gss_mg_log(1, "Out of memory while adding builtin SANON "
                         "mechanism to the GSS mechanism switch");
+#endif
 	HEIMDAL_MUTEX_unlock(&_gss_mech_mutex);
 }
 
