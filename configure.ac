@@ -152,7 +152,7 @@ AC_ARG_ENABLE(asn1-templating,
 AM_CONDITIONAL(ASN1_TEMPLATING, test "x$enable_asn1_templating" != xno)
 
 dnl
-dnl Optional modules, pk-init, digest, kx509
+dnl Optional modules, pk-init, digest, kx509, sanon
 dnl
 
 AC_ARG_ENABLE(pk-init, 
@@ -176,6 +176,14 @@ AC_ARG_ENABLE(kx509,
 if test "$enable_kx509" != no ;then
 	AC_DEFINE([KX509], 1, [Define to enable kx509.])
 fi
+
+AC_ARG_ENABLE(sanon,
+	AS_HELP_STRING([--disable-sanon],
+		[if you want to disable the SANON GSS-API mechanism]))
+if test "$enable_sanon" != no ;then
+	AC_DEFINE([SANON], 1, [Define to enable the SANON GSS-API mechanism.])
+fi
+AM_CONDITIONAL(SANON, test "$enable_sanon" != no)
 
 dnl Need to test if pkg-config exists
 PKG_PROG_PKG_CONFIG

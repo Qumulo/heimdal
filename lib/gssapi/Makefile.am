@@ -223,8 +223,11 @@ sanonsrc = \
 dist_libgssapi_la_SOURCES  = \
 	$(krb5src) \
 	$(mechsrc) \
-	$(spnegosrc) \
-	$(sanonsrc)
+	$(spnegosrc)
+
+if SANON
+dist_libgssapi_la_SOURCES += $(sanonsrc)
+endif
 
 nodist_libgssapi_la_SOURCES  = \
 	$(BUILT_SOURCES)
