@@ -929,6 +929,8 @@ krb5_cc_destroy(krb5_context context,
 {
     krb5_error_code ret2 = 0;
     krb5_error_code ret;
+
+#if defined(PKINIT) && defined(KX509)
     krb5_data d;
 
     /*
@@ -949,8 +951,10 @@ krb5_cc_destroy(krb5_context context,
             free(name);
         }
     }
+#endif
 
     ret = (*id->ops->destroy)(context, id);
+
     (void) krb5_cc_close(context, id);
     return ret ? ret : ret2;
 }

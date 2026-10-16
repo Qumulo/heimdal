@@ -1276,6 +1276,11 @@ pkinit_step(krb5_context context,
             TYPED_DATA *td,
             METHOD_DATA *out_md)
 {
+#ifndef PKINIT
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for PKINIT compiled in", ""));
+    return EINVAL;
+#else
     krb5_error_code ret = HEIM_ERR_PA_CANT_CONTINUE;
     struct pkinit_context *pkinit_ctx = pa_ctx;
 
@@ -1412,6 +1417,7 @@ pkinit_step(krb5_context context,
     }
 
     return ret;
+#endif
 }
 
 static void

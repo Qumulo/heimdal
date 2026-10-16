@@ -32,6 +32,8 @@
  */
 
 #include "krb5_locl.h"
+
+#if defined(PKINIT) && defined(KX509)
 #include <kx509_asn1.h>
 #include <kx509_err.h>
 #include "../hx509/hx_locl.h" /* XXX find a better way */
@@ -1357,3 +1359,140 @@ krb5_kx509(krb5_context context, krb5_ccache cc, const char *realm)
     free(store_exp);
     return ret;
 }
+
+#else /* !(defined(PKINIT) && defined(KX509)) */
+
+KRB5_LIB_FUNCTION krb5_error_code KRB5_LIB_CALL
+krb5_kx509(krb5_context context, krb5_ccache cc, const char *realm)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for kx509 compiled in", ""));
+    return EINVAL;
+}
+
+krb5_error_code
+krb5_kx509_ctx_add_eku(krb5_context context,
+                       krb5_kx509_req_ctx kx509_ctx,
+                       const char *oids)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for kx509 compiled in", ""));
+    return EINVAL;
+}
+
+krb5_error_code
+krb5_kx509_ctx_add_san_dns_name(krb5_context context,
+                                krb5_kx509_req_ctx kx509_ctx,
+                                const char *dname)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for kx509 compiled in", ""));
+    return EINVAL;
+}
+
+krb5_error_code
+krb5_kx509_ctx_add_san_ms_upn(krb5_context context,
+                              krb5_kx509_req_ctx kx509_ctx,
+                              const char *upn)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for kx509 compiled in", ""));
+    return EINVAL;
+}
+
+krb5_error_code
+krb5_kx509_ctx_add_san_pkinit(krb5_context context,
+                              krb5_kx509_req_ctx kx509_ctx,
+                              const char *pname)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for kx509 compiled in", ""));
+    return EINVAL;
+}
+
+krb5_error_code
+krb5_kx509_ctx_add_san_registeredID(krb5_context context,
+                                    krb5_kx509_req_ctx kx509_ctx,
+                                    const char *oids)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for kx509 compiled in", ""));
+    return EINVAL;
+}
+
+krb5_error_code
+krb5_kx509_ctx_add_san_rfc822Name(krb5_context context,
+                                  krb5_kx509_req_ctx kx509_ctx,
+                                  const char *email)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for kx509 compiled in", ""));
+    return EINVAL;
+}
+
+krb5_error_code
+krb5_kx509_ctx_add_san_xmpp(krb5_context context,
+                            krb5_kx509_req_ctx kx509_ctx,
+                            const char *jid)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for kx509 compiled in", ""));
+    return EINVAL;
+}
+
+void
+krb5_kx509_ctx_free(krb5_context context, krb5_kx509_req_ctx *ctxp)
+{
+}
+
+krb5_error_code
+krb5_kx509_ctx_init(krb5_context context, krb5_kx509_req_ctx *out)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for kx509 compiled in", ""));
+    return EINVAL;
+}
+
+krb5_error_code
+krb5_kx509_ctx_set_csr_der(krb5_context context,
+                           krb5_kx509_req_ctx ctx,
+                           krb5_data *csr_der)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for kx509 compiled in", ""));
+    return EINVAL;
+}
+
+krb5_error_code
+krb5_kx509_ctx_set_key(krb5_context context,
+                       krb5_kx509_req_ctx kx509_ctx,
+                       const char *store)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for kx509 compiled in", ""));
+    return EINVAL;
+}
+
+krb5_error_code
+krb5_kx509_ctx_set_realm(krb5_context context,
+                         krb5_kx509_req_ctx kx509_ctx,
+                         const char *realm)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for kx509 compiled in", ""));
+    return EINVAL;
+}
+
+KRB5_LIB_FUNCTION krb5_error_code KRB5_LIB_CALL
+krb5_kx509_ext(krb5_context context,
+               krb5_kx509_req_ctx kx509_ctx,
+               krb5_ccache incc,
+               const char *hx509_store,
+               krb5_ccache outcc)
+{
+    krb5_set_error_message(context, EINVAL,
+			   N_("no support for kx509 compiled in", ""));
+    return EINVAL;
+}
+
+#endif /* defined(PKINIT) && defined(KX509) */
